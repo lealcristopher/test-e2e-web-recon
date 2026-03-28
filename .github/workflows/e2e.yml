@@ -1,0 +1,47 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      BASE_URL: https://recon.lealcyber.com
+      API_URL: https://api.lealcyber.com
+      AUTH0_DOMAIN: dev-alrmpcah6fsf0yyl.us.auth0.com
+      EMAIL_INBOX_URL: https://email-inbox.cloudflare-protrude525.workers.dev
+      EMAIL_INBOX_API_KEY: ${{ secrets.EMAIL_INBOX_API_KEY }}
+      TEST_OWNER_EMAIL: ${{ secrets.TEST_OWNER_EMAIL }}
+      TEST_OWNER_PASSWORD: ${{ secrets.TEST_OWNER_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        run: pytest tests/e2e/ -v --browser chromium --tb=short
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
