@@ -24,6 +24,22 @@ def owner_credentials() -> dict:
 
 
 @pytest.fixture(scope="session")
+def member_credentials() -> dict:
+    return {
+        "email": os.environ["TEST_MEMBER_EMAIL"],
+        "password": os.environ["TEST_MEMBER_PASSWORD"],
+    }
+
+
+@pytest.fixture(scope="session")
+def user_credentials() -> dict:
+    return {
+        "email": os.environ["TEST_USER_EMAIL"],
+        "password": os.environ["TEST_USER_PASSWORD"],
+    }
+
+
+@pytest.fixture(scope="session")
 def browser_context_args():
     return {"ignore_https_errors": True}
 
@@ -34,6 +50,26 @@ def owner_page(browser: Browser, owner_credentials: dict) -> Page:
     context = browser.new_context()
     page = context.new_page()
     login(page, owner_credentials["email"], owner_credentials["password"])
+    yield page
+    context.close()
+
+
+@pytest.fixture
+def member_page(browser: Browser, member_credentials: dict) -> Page:
+    """Contexto fresh pré-autenticado como o member de teste."""
+    context = browser.new_context()
+    page = context.new_page()
+    login(page, member_credentials["email"], member_credentials["password"])
+    yield page
+    context.close()
+
+
+@pytest.fixture
+def user_page(browser: Browser, user_credentials: dict) -> Page:
+    """Contexto fresh pré-autenticado como o user de teste (sem org)."""
+    context = browser.new_context()
+    page = context.new_page()
+    login(page, user_credentials["email"], user_credentials["password"])
     yield page
     context.close()
 
